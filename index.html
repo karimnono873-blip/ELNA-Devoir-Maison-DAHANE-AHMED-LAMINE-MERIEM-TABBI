@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filtre Passe-Bande - Cellule de Rauch | Dahane Ahmed Lamine & Tabbi Meriem</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --space-bg: #050510;
+            --pixel-blue: #4cc9f0;
+            --neon-violet: #7b2cbf;
+            --deep-purple: #3c096c;
+            --text-main: #e0e1dd;
+            --glow-blue: 0 0 10px #4cc9f0, 0 0 20px #4cc9f0;
+            --glow-violet: 0 0 10px #7b2cbf, 0 0 20px #7b2cbf;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--space-bg);
+            background-image: radial-gradient(circle at 50% 0%, var(--deep-purple) 0%, transparent 50%), 
+                              radial-gradient(circle at 100% 100%, #10002b 0%, transparent 50%);
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* --- Page de Garde --- */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border-bottom: 2px solid var(--neon-violet);
+            box-shadow: 0 10px 30px rgba(123, 44, 191, 0.3);
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            color: var(--pixel-blue);
+            text-shadow: var(--glow-blue);
+            margin-bottom: 1rem;
+        }
+
+        .hero h2 {
+            font-size: 1.5rem;
+            color: var(--text-main);
+            margin-bottom: 2rem;
+        }
+
+        .hero .credits {
+            margin-top: 3rem;
+            padding: 1.5rem 3rem;
+            background: rgba(60, 9, 108, 0.2);
+            border: 1px solid var(--neon-violet);
+            border-radius: 15px;
+            box-shadow: inset 0 0 15px rgba(123, 44, 191, 0.5);
+        }
+
+        .hero .credits p {
+            font-size: 1.2rem;
+            margin: 5px 0;
+        }
+
+        .highlight-violet { color: #c77dff; font-weight: bold; }
+        .highlight-blue { color: var(--pixel-blue); font-weight: bold; }
+
+        /* --- Sections --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        section {
+            margin-bottom: 5rem;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border-left: 4px solid var(--pixel-blue);
+            box-shadow: 0 0 20px rgba(76, 201, 240, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            color: var(--neon-violet);
+            text-shadow: var(--glow-violet);
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(123, 44, 191, 0.3);
+            padding-bottom: 10px;
+        }
+
+        /* --- SVG Circuit --- */
+        .circuit-container {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: #080b14;
+            border-radius: 15px;
+            border: 1px dashed var(--pixel-blue);
+        }
+        
+        svg {
+            max-width: 100%;
+            height: auto;
+            filter: drop-shadow(0 0 5px var(--pixel-blue));
+        }
+
+        .svg-line { stroke: var(--pixel-blue); stroke-width: 3; fill: none; }
+        .svg-comp { stroke: var(--neon-violet); stroke-width: 3; fill: #050510; }
+        .svg-text { fill: var(--text-main); font-family: 'Orbitron'; font-size: 18px; }
+
+        /* --- Math Calculations --- */
+        .math-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            border: 1px solid rgba(76, 201, 240, 0.3);
+            font-size: 1.2rem;
+            overflow-x: auto;
+        }
+
+        .frac {
+            display: inline-block;
+            vertical-align: middle;
+            text-align: center;
+            margin: 0 0.2em;
+        }
+        .frac > span { display: block; padding: 0.1em; }
+        .frac span.bottom { border-top: thin solid var(--text-main); }
+
+        ul { list-style-type: square; color: var(--pixel-blue); margin-left: 2rem; }
+        li span { color: var(--text-main); }
+
+        /* --- Charts --- */
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-top: 2rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--neon-violet);
+            margin-top: 3rem;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--pixel-blue);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <h1>Filtre Passe-Bande</h1>
+        <h2>Cellule de Rauch - 2ème Ordre</h2>
+        
+        <div class="credits">
+            <p>Présenté à : <span class="highlight-violet">Dr. Laib</span></p>
+            <p>Module : Électronique Analytique / Systèmes Automatisés</p>
+            <br>
+            <p>Créé par : <span class="highlight-blue">Dahane Ahmed Lamine</span></p>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <section id="circuit">
+            <h2 class="section-title">1. Visualisation du Circuit (Topologie de Rauch)</h2>
+            <p>Le filtre de Rauch passe-bande utilise une contre-réaction multiple avec un amplificateur opérationnel. Il est constitué de trois résistances et deux condensateurs.</p>
+            
+            <div class="circuit-container">
+                <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="200" r="5" fill="#4cc9f0" />
+                    <text x="20" y="205" class="svg-text">Ve</text>
+                    <line x1="50" y1="200" x2="150" y2="200" class="svg-line" />
+                    
+                    <rect x="150" y="185" width="60" height="30" class="svg-comp" />
+                    <text x="165" y="175" class="svg-text">R1</text>
+                    <line x1="210" y1="200" x2="300" y2="200" class="svg-line" />
+                    
+                    <circle cx="300" cy="200" r="5" fill="#c77dff" />
+                    <text x="290" y="185" class="svg-text" fill="#c77dff">N</text>
+
+                    <line x1="300" y1="200" x2="380" y2="200" class="svg-line" />
+                    <line x1="380" y1="180" x2="380" y2="220" class="svg-comp" />
+                    <line x1="390" y1="180" x2="390" y2="220" class="svg-comp" />
+                    <line x1="390" y1="200" x2="500" y2="200" class="svg-line" />
+                    <text x="375" y="170" class="svg-text">C1</text>
+
+                    <line x1="300" y1="200" x2="300" y2="280" class="svg-line" />
+                    <rect x="285" y="280" width="30" height="60" class="svg-comp" />
+                    <text x="325" y="315" class="svg-text">R2</text>
+                    <line x1="300" y1="340" x2="300" y2="380" class="svg-line" />
+                    
+                    <line x1="280" y1="380" x2="320" y2="380" class="svg-line" />
+                    <line x1="290" y1="388" x2="310" y2="388" class="svg-line" />
+                    <line x1="297" y1="396" x2="303" y2="396" class="svg-line" />
+
+                    <polygon points="500,160 500,280 620,220" class="svg-comp" />
+                    <text x="515" y="205" class="svg-text">-</text>
+                    <text x="515" y="255" class="svg-text">+</text>
+                    
+                    <line x1="500" y1="250" x2="450" y2="250" class="svg-line" />
+                    <line x1="450" y1="250" x2="450" y2="340" class="svg-line" />
+                    <line x1="430" y1="340" x2="470" y2="340" class="svg-line" />
+                    <line x1="440" y1="348" x2="460" y2="348" class="svg-line" />
+
+                    <line x1="500" y1="200" x2="500" y2="100" class="svg-line" />
+                    <line x1="500" y1="100" x2="520" y2="100" class="svg-line" />
+                    <rect x="520" y="85" width="60" height="30" class="svg-comp" />
+                    <text x="535" y="75" class="svg-text">R3</text>
+                    <line x1="580" y1="100" x2="680" y2="100" class="svg-line" />
+                    <line x1="680" y1="100" x2="680" y2="220" class="svg-line" />
+
+                    <line x1="300" y1="200" x2="300" y2="40" class="svg-line" />
+                    <line x1="300" y1="40" x2="530" y2="40" class="svg-line" />
+                    <line x1="530" y1="20" x2="530" y2="60" class="svg-comp" />
+                    <line x1="540" y1="20" x2="540" y2="60" class="svg-comp" />
+                    <text x="525" y="15" class="svg-text">C2</text>
+                    <line x1="540" y1="40" x2="680" y2="40" class="svg-line" />
+
+                    <line x1="620" y1="220" x2="720" y2="220" class="svg-line" />
+                    <circle cx="720" cy="220" r="5" fill="#4cc9f0" />
+                    <text x="735" y="225" class="svg-text">Vs</text>
+                </svg>
+            </div>
+        </section>
+
+        <section id="vref">
+            <h2 class="section-title">2. Étude de V<sub>ref+</sub> et V<sub>ref-</sub> (Masse Virtuelle)</h2>
+            <p>Avant d'attaquer la fonction de transfert, il est crucial d'analyser le comportement de l'Amplificateur Opérationnel (AOP).</p>
+            <div class="math-box">
+                <ul>
+                    <li><span>L'entrée non-inverseuse (<strong>V<sub>ref+</sub></strong>) est directement reliée à la masse : V<sup>+</sup> = 0V.</span></li>
+                    <li><span>Nous considérons un AOP idéal en régime linéaire (boucle de contre-réaction fermée via R3). Par conséquent, la différence de potentiel différentielle &epsilon; = 0.</span></li>
+                    <li><span>On déduit : <strong>V<sub>ref-</sub> = V<sup>-</sup> = V<sup>+</sup> = 0V</strong>.</span></li>
+                </ul>
+            </div>
+            <p><strong>Interprétation industrielle :</strong> Cette propriété crée une "masse virtuelle" au nœud V<sup>-</sup>. Aucun courant n'entre dans l'AOP (impédance d'entrée infinie), ce qui nous permet d'isoler parfaitement les courants de la boucle d'entrée (C1) et de la boucle de rétroaction (R3), garantissant la stabilité du traitement de signal.</p>
+        </section>
+
+        <section id="calculations">
+            <h2 class="section-title">3. Calcul Détaillé : Fonction de Transfert (A à Z)</h2>
+            
+            <h3>Étape A : Loi des Nœuds à l'entrée inverseuse (V<sup>-</sup>)</h3>
+            <p>En appliquant le théorème de Millman au nœud V<sup>-</sup> (sachant que V<sup>-</sup> = 0V) :</p>
+            <div class="math-box">
+                <div class="frac">
+                    <span>V<sub>N</sub> &middot; jC<sub>1</sub>&omega; + V<sub>S</sub> / R<sub>3</sub></span>
+                    <span class="bottom">jC<sub>1</sub>&omega; + 1 / R<sub>3</sub></span>
+                </div>
+                = 0  &nbsp; &rArr; &nbsp; V<sub>N</sub> &middot; jC<sub>1</sub>&omega; = - V<sub>S</sub> / R<sub>3</sub>
+                <br><br>
+                <strong>V<sub>N</sub> = 
+                <div class="frac">
+                    <span>- V<sub>S</sub></span>
+                    <span class="bottom">j &middot; R<sub>3</sub> C<sub>1</sub> &omega;</span>
+                </div></strong>
+            </div>
+
+            <h3>Étape B : Loi des Nœuds au Nœud N</h3>
+            <p>Appliquons Millman au nœud central N (potentiel V<sub>N</sub>) :</p>
+            <div class="math-box">
+                V<sub>N</sub> = 
+                <div class="frac">
+                    <span>(V<sub>E</sub> / R<sub>1</sub>) + (V<sub>S</sub> &middot; jC<sub>2</sub>&omega;) + (V<sup>-</sup> &middot; jC<sub>1</sub>&omega;) + (0 / R<sub>2</sub>)</span>
+                    <span class="bottom">(1 / R<sub>1</sub>) + (1 / R<sub>2</sub>) + jC<sub>1</sub>&omega; + jC<sub>2</sub>&omega;</span>
+                </div>
+            </div>
+            
+            <h3>Étape C : Remplacement et Simplification</h3>
+            <p>En remplaçant V<sub>N</sub> par son expression trouvée à l'Étape A et V<sup>-</sup> = 0, et en regroupant les termes, on obtient la fonction de transfert <u>H(j&omega;) = V<sub>S</sub> / V<sub>E</sub></u> :</p>
+            
+            <div class="math-box" style="text-align: center; color: var(--neon-violet);">
+                <strong>H(j&omega;) = 
+                <div class="frac">
+                    <span>- j &middot; R<sub>3</sub> C<sub>1</sub> &omega; / R<sub>1</sub></span>
+                    <span class="bottom">1 - R<sub>3</sub> R<sub>p</sub> C<sub>1</sub> C<sub>2</sub> &omega;<sup>2</sup> + j &middot; R<sub>3</sub>(C<sub>1</sub> + C<sub>2</sub>)&omega;</span>
+                </div>
+                </strong>
+                <br><br>
+                <span style="font-size: 0.9rem; color: var(--pixel-blue);">(Où R<sub>p</sub> est la résistance équivalente de R<sub>1</sub> // R<sub>2</sub>)</span>
+            </div>
+
+            <h3>Identification des Paramètres Fondamentaux</h3>
+            <p>On identifie cette équation à la forme canonique d'un passe-bande du 2ème ordre :</p>
+            <div class="math-box">
+                <ul>
+                    <li>Pulsation de résonance : <strong>&omega;<sub>0</sub> = 1 / &radic;(R<sub>p</sub> R<sub>3</sub> C<sub>1</sub> C<sub>2</sub>)</strong></li>
+                    <li>Gain maximal (à &omega;<sub>0</sub>) : <strong>A<sub>0</sub> = - R<sub>3</sub> / (R<sub>1</sub> &middot; (1 + C<sub>2</sub>/C<sub>1</sub>))</strong></li>
+                    <li>Facteur de qualité (Q) : <strong>Q = &radic;(R<sub>3</sub>/(R<sub>p</sub>(C<sub>1</sub>+C<sub>2</sub>)<sup>2</sup>/(C<sub>1</sub>C<sub>2</sub>)))</strong></li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="module-phase">
+            <h2 class="section-title">4. Équations du Module et de la Phase (Argument)</h2>
+            <p>À partir de la forme canonique normalisée avec &Omega; = &omega;/&omega;<sub>0</sub> :</p>
+            
+            <div class="math-box">
+                <strong style="color: var(--pixel-blue);">Module |H(j&omega;)| :</strong><br><br>
+                |H(j&omega;)| = 
+                <div class="frac">
+                    <span>|A<sub>0</sub>|</span>
+                    <span class="bottom">&radic;( 1 + Q<sup>2</sup> ( &Omega; - 1/&Omega; )<sup>2</sup> )</span>
+                </div>
+                <br><br>
+                <strong style="color: var(--pixel-blue);">Argument &phi;(&omega;) :</strong><br><br>
+                &phi;(&omega;) = &pi; - arctan( Q &middot; ( &Omega; - 1/&Omega; ) )
+                <br>
+                <span style="font-size: 0.9rem;">(Le &pi; provient du signe négatif du gain A<sub>0</sub> dû à l'entrée inverseuse).</span>
+            </div>
+        </section>
+
+        <section id="visualization">
+            <h2 class="section-title">5. Visualisation des Diagrammes de Bode</h2>
+            <p>Voici la représentation dynamique du filtre passe-bande de Rauch. Observez l'atténuation de +20 dB/décade avant la fréquence de coupure, et -20 dB/décade après.</p>
+            
+            <div class="chart-wrapper">
+                <canvas id="bodeChart"></canvas>
+            </div>
+        </section>
+        
+        <section id="conclusion">
+            <h2 class="section-title">6. Conclusion</h2>
+            <p>La cellule de Rauch est un montage privilégié pour les filtres passe-bande actifs du second ordre en raison de son excellente stabilité aux tolérances des composants et de son gain ajustable indépendamment de la fréquence de résonance. Dans le contexte de l'automatisation et de l'IoT industriel (Industry 4.0), ce type d'architecture est essentiel pour conditionner les signaux analogiques des capteurs avant leur numérisation par des automates (comme le M241), isolant ainsi les données utiles du bruit électromagnétique environnant.</p>
+        </section>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Dahane Ahmed Lamine - Projet GitHub</p>
+        <p style="font-size: 0.8rem; margin-top: 5px;">Thème : Astronomic Google Pixel Violet Blue</p>
+    </footer>
+
+    <script>
+        const ctx = document.getElementById('bodeChart').getContext('2d');
+        
+        // Génération des données pour un passe-bande (échelle log)
+        const generateData = () => {
+            let magnitude = [];
+            let phase = [];
+            let labels = [];
+            const w0 = 1000; // Fréq de résonance arbitraire (rad/s)
+            const Q = 5; // Facteur de qualité
+            const A0 = 10; // Gain max
+
+            for(let i = 10; i <= 100000; i *= 1.2) {
+                let w = i;
+                let omegaNorm = w / w0;
+                
+                // Calcul du module en dB
+                let mag = A0 / Math.sqrt(1 + Math.pow(Q * (omegaNorm - 1/omegaNorm), 2));
+                let magDb = 20 * Math.log10(mag);
+                
+                // Calcul de la phase (en degrés)
+                let ph = Math.PI - Math.atan(Q * (omegaNorm - 1/omegaNorm));
+                let phDeg = ph * (180 / Math.PI);
+
+                labels.push(w.toFixed(0));
+                magnitude.push(magDb);
+                phase.push(phDeg);
+            }
+            return { labels, magnitude, phase };
+        };
+
+        const dataSet = generateData();
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dataSet.labels,
+                datasets: [
+                    {
+                        label: 'Gain (dB)',
+                        data: dataSet.magnitude,
+                        borderColor: '#4cc9f0',
+                        backgroundColor: 'rgba(76, 201, 240, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Phase (Degrés)',
+                        data: dataSet.phase,
+                        borderColor: '#7b2cbf',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#e0e1dd', font: { family: 'Rajdhani', size: 14 } }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'category', // Simplifié pour la démo, représente log
+                        title: { display: true, text: 'Pulsation ω (rad/s)', color: '#c77dff' },
+                        ticks: { color: '#e0e1dd', maxTicksLimit: 10 }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Gain (dB)', color: '#4cc9f0' },
+                        ticks: { color: '#4cc9f0' },
+                        grid: { color: 'rgba(76, 201, 240, 0.1)' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Phase (°)', color: '#7b2cbf' },
+                        ticks: { color: '#7b2cbf' },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
